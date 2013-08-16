@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-br" xml:lang="pt-br" >
+<head>
+    {% load adminmedia %}
+    {% load i18n %}
+    <title>Recortar Imagem | Site de administração do Django</title>
+    <link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/base.css" />
+    <link rel="stylesheet" href="{{MEDIA_URL}}css/jquery-jcrop.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{% admin_media_prefix %}css/forms.css" />
+    <script type="text/javascript" src="{{MEDIA_URL}}js/jquery.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}js/jquery-jcrop.js" ></script>
+    <script type="text/javascript">
+		$(window).load(function(){
+			$('#cropBox').Jcrop({
+			    onSelect: mostrarDimensoesCrop,
+			    onChange: mostrarDimensoesCrop,
+			    {% if largura and altura %}
+			    setSelect: [ 0, 0, {{largura}}, {{altura}} ],
+				{% if proporcao %} aspectRatio: {{proporcao}} {% endif %}
+			    {% else %}
+			    setSelect: [0, 0, 32, 32],
+			    {% endif %}     
+			});	
+			
+			
+			var altura_real = $('#cropBox').height();
+			var largura_real = $('#cropBox').width();
+			
+			$('#cropBox').css('max-width', screen.width-130);
+			
+			altura_modificada = $('#cropBox').height();
+			largura_modificada = $('#cropBox').width();
+			
+			<!--var diferenca_altura = altura_real - altura_modificada;-->
+			<!--var diferenca_largura = largura_real - largura_modificada;-->
+			
+			$('#altura_real').attr("value", altura_real);
+			$('#largura_real').attr("value", largura_real);
+			
+			<!--alert("altura real: "+altura_real+"\n altura modificada:"+altura_modificada+"\n largura real: "+largura_real+"\n largura modificada:"+largura_modificada);-->
+			<!--alert("Altura:"+diferenca_altura+"\n largura: "+diferenca_largura);-->
+			
+			    
+		});
+		
+		function calcular(valor, dimensao_real, dimensao_alterada){		    
+		    result = (dimensao_real*valor)/dimensao_alterada;
+		    return parseInt(result);
+		}
+			  
+		function mostrarDimensoesCrop(c) {
+		    altura_modificada = $('#cropBox').height();
+		    largura_modificada = $('#cropBox').width();
+		    
+		    altura_real = $('#altura_real').val();
+		    largura_real = $('#largura_real').val();
+		
+		    
+		    $('#alturaField').val(c.h);
+		    $('#larguraField').val(c.w);
+		    
+		    $('#xInicialField').val(calcular(c.x, largura_real, largura_modificada));
+		    $('#xFinalField').val(calcular(c.x2, largura_real, largura_modificada));
+		    $('#yInicialField').val(calcular(c.y, altura_real, altura_modificada));
+		    $('#yFinalField').val(calcular(c.y2, altura_real, altura_modificada));
+		}
+			
+		function setarCoordenadas() {
+		   if (crop == null) {
+			  alert("Faça uma seleção inicial");
+		   }
+		   else {
+			  novaCoordenada = [$("#xInicialField").val(), $("#yInicialField").val(), $("#xFinalField").val(), $("#yFinalField").val()];
+			  crop.animateTo(novaCoordenada);
+		   }	    
+		}
+		
+		function usar_original(redirect_url){
+		    var novo_url = redirect_url.substr(0, redirect_url.lastIndexOf("/")); 
+		    window.location.href = novo_url.substr(0, novo_url.lastIndexOf("/"));
+        }
+    </script>
+</head>
+<body class="evento-evento change-form">
+<!-- Container -->
+<div id="container">
+    <div id="content" class="colM">        
+        <div id="content-main">
+            <div>
+                  <div class="module" align="center">
+                      <div>
+                            <form action="/utils/cropar_imagem/{{imagem_name}}/" method="POST">
+			    {% csrf_token %}
+			    <div class="submit-row" style="text-align:center !important">
+				<!--<input type="button" onclick='javascript: usar_original("{{post_redirect}}");' value="Usar Original" />-->
+				<input type="submit" value="Recortar" />
+			    </div>
+                              <input type="hidden" id="xInicialField" size="6" name="x" />
+                              <input type="hidden" id="xFinalField" size="6" name="x2"/> 
+                              <input type="hidden" id="yInicialField" size="6" name="y"/>
+                              <input type="hidden" id="yFinalField" size="6" name="y2"/>  
+			      
+			      <input type="hidden" id="altura_real" name="altura_real"/>
+                              <input type="hidden" id="largura_real" name="largura_real"/>  
+                              <table border="0">
+                                <tr border="0">
+                                  <td>&nbsp;</td>
+                                  <td><img src="{{MEDIA_URL}}{{imagem_name}}" id="cropBox"/></td>
+                                  <td></td>
+                                </tr>                       
+                              </table>
+                                <input name="redirect" type="hidden" value="{{post_redirect}}" />
+                        </div>        
+                  </div>
+  
+  </form> 
+
+</div>
+</div>
+
+        
+        <br class="clear" />
+    </div>
+    <!-- END Content -->
+
+    <div id="footer"></div>
+</div>
+<!-- END Container -->
+
+</body>
+</html>
